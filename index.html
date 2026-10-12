@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Remittance Cost Viewer</title>
+<meta name="description" content="The cost of sending remittances between countries, from the World Bank's Remittance Prices Worldwide database (2016-2025), filterable by UN WESP region, subregion and development status of sender and receiver.">
+<style>
+/* Layout: one column; filter panel (receiving / sending / service) above tiles, trend, breakdowns, corridor table. */
+:root{
+  color-scheme: light;
+  --page:#f4f3f0; --surface-1:#fcfcfb; --surface-2:#f0efec; --surface-3:#e8e7e2;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#76756f;
+  --rule:#dddcd6; --grid:#e8e7e2; --axis:#a3a29b;
+  --series-1:#2a78d6; --series-2:#eb6834; --ref:#52514e;
+  --focus:#2a78d6; --tooltip-bg:#0b0b0b; --tooltip-text:#f0efec;
+  --up:#b3261e; --down:#006300; --shadow:rgba(11,11,11,.12);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --page:#111110; --surface-1:#1a1a19; --surface-2:#242422; --surface-3:#2e2e2b;
+    --text-primary:#f0efec; --text-secondary:#c3c2b7; --text-muted:#9b9a92;
+    --rule:#33332f; --grid:#2a2a27; --axis:#5c5b55;
+    --series-1:#3987e5; --series-2:#d95926; --ref:#c3c2b7;
+    --focus:#3987e5; --tooltip-bg:#f0efec; --tooltip-text:#0b0b0b;
+    --up:#f2867f; --down:#6fcf6f; --shadow:rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#111110; --surface-1:#1a1a19; --surface-2:#242422; --surface-3:#2e2e2b;
+  --text-primary:#f0efec; --text-secondary:#c3c2b7; --text-muted:#9b9a92;
+  --rule:#33332f; --grid:#2a2a27; --axis:#5c5b55;
+  --series-1:#3987e5; --series-2:#d95926; --ref:#c3c2b7;
+  --focus:#3987e5; --tooltip-bg:#f0efec; --tooltip-text:#0b0b0b;
+  --up:#f2867f; --down:#6fcf6f; --shadow:rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--page);color:var(--text-primary);
+  font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}
+.wrap{max-width:1180px;margin:0 auto;padding-block:24px 48px;padding-inline:16px}
+header{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
+header > div:first-child{min-width:0;flex:1 1 420px}
+h1{font-size:24px;line-height:1.2;margin:0 0 6px;font-weight:650;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--text-secondary);margin:0;max-width:760px}
+button,select,input{font:inherit;color:var(--text-primary)}
+.btn{background:var(--surface-1);border:1px solid var(--rule);border-radius:8px;padding:6px 10px;cursor:pointer}
+.btn:focus-visible,select:focus-visible,input:focus-visible,svg:focus-visible,th button:focus-visible,rect:focus-visible,.ms-btn:focus-visible,.ms-act:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.filters{background:var(--surface-1);border:1px solid var(--rule);border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;flex-direction:column;gap:12px;position:relative;z-index:10}
+.fgroup{display:grid;grid-template-columns:120px repeat(4,minmax(0,1fr));gap:8px 12px;align-items:end}
+.fgroup .gname{font-size:12px;font-weight:650;color:var(--text-primary);text-transform:uppercase;letter-spacing:.06em;align-self:center}
+.fgroup + .fgroup{border-top:1px solid var(--grid);padding-top:12px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-secondary);min-width:0;position:relative}
+.field select{background:var(--surface-2);border:1px solid var(--rule);border-radius:8px;padding:6px 8px;width:100%;min-width:0;font-size:14px}
+/* multi-select */
+.ms-btn{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;min-width:0;background:var(--surface-2);border:1px solid var(--rule);border-radius:8px;padding:6px 8px;cursor:pointer;text-align:left;font-size:14px}
+.ms-btn .ms-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ms-btn .ms-val.on{font-weight:600}
+.ms-btn .ms-caret{flex:0 0 auto;color:var(--text-muted);font-size:10px}
+.ms-panel{position:absolute;top:100%;left:0;margin-top:4px;width:max(100%,260px);max-width:min(340px,calc(100vw - 32px));background:var(--surface-1);border:1px solid var(--rule);border-radius:10px;box-shadow:0 8px 24px var(--shadow);z-index:30;padding:8px;display:flex;flex-direction:column;gap:6px}
+.ms-panel.right{left:auto;right:0}
+.ms-panel input[type=search]{background:var(--surface-2);border:1px solid var(--rule);border-radius:6px;padding:5px 8px;width:100%;font-size:13px}
+.ms-acts{display:flex;gap:12px;font-size:12px}
+.ms-act{background:none;border:none;padding:0;color:var(--series-1);cursor:pointer;font-size:12px}
+.ms-list{max-height:260px;overflow:auto;margin:0;padding:0;list-style:none}
+.ms-list label{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:6px;cursor:pointer;color:var(--text-primary);font-size:13px}
+.ms-list label:hover{background:var(--surface-2)}
+.ms-list input{accent-color:var(--series-1);margin:0;flex:0 0 auto}
+.ms-empty{font-size:12px;color:var(--text-muted);padding:4px 6px}
+.factions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.factions .small{flex:1 1 300px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.tile{background:var(--surface-1);border:1px solid var(--rule);border-radius:12px;padding:12px 14px;min-width:0}
+.tile .k{font-size:12px;color:var(--text-secondary)}
+.tile .v{font-size:28px;font-weight:650;line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums}
+.tile .d{font-size:12px;color:var(--text-muted);margin-top:2px}
+.card{background:var(--surface-1);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;margin-bottom:16px;min-width:0}
+.card h2{font-size:16px;margin:0 0 2px;font-weight:620}
+.card .note{font-size:12px;color:var(--text-secondary);margin:0 0 8px}
+.cardhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.cardhead > div{min-width:0;flex:1 1 220px}
+.cardhead .field{flex:0 0 auto}
+.headtools{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.cardhead > .headtools{flex:0 1 auto;min-width:0;justify-content:flex-end}
+.dlbtn{background:var(--surface-1);border:1px solid var(--rule);border-radius:8px;padding:5px 9px;cursor:pointer;font-size:12px;color:var(--text-secondary);white-space:nowrap}
+.dlbtn:hover{color:var(--text-primary);border-color:var(--axis)}
+.dlbtn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.subhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary);margin:4px 0 6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.key{display:inline-block;width:16px;height:2px;border-radius:2px}
+.key.dash{background:none;border-top:2px dashed var(--ref);height:0}
+.grid2{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px}
+.chart{position:relative;width:100%}
+.chart.scroll{max-height:620px;overflow-y:auto;overflow-x:hidden}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.tooltip{position:absolute;pointer-events:none;background:var(--tooltip-bg);color:var(--tooltip-text);
+  border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.35;min-width:150px;opacity:0;transition:opacity .08s;z-index:5;white-space:nowrap}
+.tooltip .t{font-weight:600;margin-bottom:4px}
+.tooltip .row{display:flex;align-items:center;gap:8px}
+.tooltip .row b{font-variant-numeric:tabular-nums}
+.tooltip .muted{opacity:.75}
+.linkbtn{background:none;border:none;color:var(--text-secondary);text-decoration:underline;cursor:pointer;padding:0;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--grid)}
+th{font-weight:600;color:var(--text-secondary);font-size:12px;position:sticky;top:0;background:var(--surface-1)}
+th button{background:none;border:none;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:inherit}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.tablewrap{max-height:460px;overflow:auto;border:1px solid var(--grid);border-radius:8px}
+.tabletools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0 8px}
+.tabletools input{background:var(--surface-2);border:1px solid var(--rule);border-radius:8px;padding:6px 8px;min-width:0;flex:0 1 260px}
+.small{font-size:12px;color:var(--text-muted)}
+footer{font-size:12px;color:var(--text-secondary);border-top:1px solid var(--rule);padding-top:12px}
+footer p{margin:6px 0;max-width:900px}
+a{color:var(--series-1)}
+.empty{color:var(--text-muted);font-size:13px;padding:24px 0;text-align:center}
+@media (max-width:960px){.fgroup{grid-template-columns:repeat(2,minmax(0,1fr))}.fgroup .gname{grid-column:1/-1}}
+@media (max-width:860px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:480px){.tile .v{font-size:22px}h1{font-size:20px}.fgroup{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){.tooltip{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>The cost of sending remittances</h1>
+      <p class="sub">Average total cost (fee + FX margin, as % of the amount sent) of remittance services priced by the World Bank, by quarter, 2016 Q2 to 2025 Q3. Filter by the region, subregion and development status (UN WESP classification) of the receiving and the sending country.</p>
+    </div>
+    <div class="headtools">
+      <button class="btn" id="dlFull" type="button" title="All 204,469 service quotes, Q2 2016 to Q3 2025, with WESP regions (Excel, 14 MB)">Download full dataset (Excel)</button>
+      <button class="btn" id="theme" aria-label="Toggle dark mode">◐</button>
+    </div>
+  </header>
+
+  <section class="filters" aria-label="Filters">
+    <div class="fgroup">
+      <div class="gname">Receiving country</div>
+      <div class="field" id="ms-rRegion"></div>
+      <div class="field" id="ms-rSub"></div>
+      <div class="field" id="ms-rStatus"></div>
+      <div class="field" id="ms-rCountry"></div>
+    </div>
+    <div class="fgroup">
+      <div class="gname">Sending country</div>
+      <div class="field" id="ms-sRegion"></div>
+      <div class="field" id="ms-sSub"></div>
+      <div class="field" id="ms-sStatus"></div>
+      <div class="field" id="ms-sCountry"></div>
+    </div>
+    <div class="fgroup">
+      <div class="gname">Service and view</div>
+      <div class="field" id="ms-provider"></div>
+      <div class="field" id="ms-instrument"></div>
+      <label class="field"><span>Quarter (figures, bars, table)</span><select id="fQuarter"></select></label>
+      <label class="field"><span>Amount (bars and table)</span><select id="fAmount"></select></label>
+    </div>
+    <div class="factions">
+      <span class="small" id="selSummary"></span>
+      <button class="btn" id="reset">Reset filters</button>
+    </div>
+  </section>
+
+  <section class="tiles" aria-live="polite">
+    <div class="tile"><div class="k" id="tk1"></div><div class="v" id="tv1"></div><div class="d" id="td1"></div></div>
+    <div class="tile"><div class="k">Year-on-year change</div><div class="v" id="tv2"></div><div class="d" id="td2"></div></div>
+    <div class="tile"><div class="k">Services quoted</div><div class="v" id="tv3"></div><div class="d" id="td3"></div></div>
+    <div class="tile"><div class="k">Against the 3% SDG target</div><div class="v" id="tv4"></div><div class="d" id="td4"></div></div>
+  </section>
+
+  <section class="card">
+    <div class="cardhead">
+      <div><h2>Average cost by quarter</h2>
+      <p class="note">Simple average of transparent services. Dashed line marks the SDG 10.c target of 3%. Q2 2025 was not published by the World Bank (n/a).</p></div>
+      <div class="headtools">
+        <button class="dlbtn" type="button" data-export="line">Download PNG</button>
+        <button class="dlbtn" type="button" data-xlsx="line">Download data</button>
+      </div>
+    </div>
+    <div class="legend" id="lineLegend"></div>
+    <div class="chart" id="lineChart"></div>
+    <button class="linkbtn" id="toggleLineTable" aria-expanded="false">Show data table</button>
+    <div id="lineTableWrap" hidden></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <div class="cardhead">
+        <div><h2 id="barTitle"></h2><p class="note" id="barNote"></p></div>
+        <div class="headtools">
+          <label class="field"><span>Group by</span><select id="groupBy"></select></label>
+          <button class="dlbtn" type="button" data-export="bar">Download PNG</button>
+          <button class="dlbtn" type="button" data-xlsx="bar">Download data</button>
+        </div>
+      </div>
+      <div class="chart scroll" id="barChart"></div>
+    </section>
+    <section class="card">
+      <div class="subhead"><h2>By payment instrument</h2><div class="headtools"><button class="dlbtn" type="button" data-export="inst">Download PNG</button><button class="dlbtn" type="button" data-xlsx="inst">Download data</button></div></div>
+      <p class="note" id="instNote"></p>
+      <div class="chart" id="instChart"></div>
+      <div class="subhead" style="margin-top:14px"><h2>By provider type</h2><div class="headtools"><button class="dlbtn" type="button" data-export="prov">Download PNG</button><button class="dlbtn" type="button" data-xlsx="prov">Download data</button></div></div>
+      <div class="chart" id="provChart"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2 id="tableTitle"></h2>
+    <div class="tabletools">
+      <input type="search" id="search" placeholder="Search country or region…" aria-label="Search corridors">
+      <span class="small" id="tableCount"></span>
+      <button class="dlbtn" type="button" data-xlsx="table" style="margin-left:auto">Download table</button>
+    </div>
+    <div class="tablewrap"><table id="corrTable"></table></div>
+  </section>
+
+  <footer>
+    <p><b>Source:</b> World Bank, <a href="https://remittanceprices.worldbank.org" target="_blank" rel="noopener">Remittance Prices Worldwide (RPW)</a>, dataset 2011 to Q3 2025, sheet “Dataset (from Q2 2016)”. License CC BY 4.0.</p>
+    <p><b>What it measures:</b> each observation is a price quote for one service (provider × corridor × payment and pickup method) for a hypothetical USD 200 and USD 500 transfer, collected by mystery shopping. These are not actual transactions and are not volume-weighted.</p>
+    <p><b>Method:</b> simple average of total cost (fee + FX margin) across transparent services, as in the World Bank global average (SDG indicator 10.c.1). With no filters, the series reproduces the published global average (for example, 6.36% in Q3 2025).</p>
+    <p><b>Regions and status:</b> UN <i>World Economic Situation and Prospects</i> (WESP) Annex classification: region, subregion and development status (developed, economies in transition, developing). Where a country has no subregion, its region is used. Kosovo and Tonga are not in the classification and show as “Unclassified”.</p>
+    <p><b>Cleaning:</b> in the original file, values for 2024 Q3 and Q4 were stored as text; they were converted to numbers. The World Bank published no data for Q2 2025.</p>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="data/rpw_costs.js"></script>
+<script>
+(function(){
+"use strict";
+const D=window.RPW_DATA;
+const NAMES={"MTO":"Money transfer operator","DVD":"Developed","DVG":"Developing","EIT":"Economies in transition",
+  "Commonwealth of Independent States and Georgia":"CIS and Georgia"};
+const nm=k=>NAMES[k]||k;
+const fmt=(v,d=2)=>v==null||isNaN(v)?"–":v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtInt=v=>v.toLocaleString("en-US");
+const qLabel=p=>{const [y,q]=p.split("_"); return `Q${q[0]} ${y}`;};
+const el=(tag,attrs={},text)=>{const e=document.createElement(tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(text!=null) e.textContent=text; return e;};
+const SVGNS="http://www.w3.org/2000/svg";
+const sv=(tag,attrs={})=>{const e=document.createElementNS(SVGNS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e;};
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+// ---- data
+const P=D.periods, rows=D.rows, SND=D.senders, RCV=D.receivers;   // country: [code,name,region,subregion,status]
+const missing=new Set(P.map((p,i)=>i).filter(i=>!rows.some(r=>r[0]===i)));
+const lastIdx=Math.max(...rows.map(r=>r[0]));
+const STATUS_ORDER=["DVD","EIT","DVG","Unclassified"];
+
+// ---- state: empty Set = no filter (all)
+const SETKEYS=["rRegion","rSub","rStatus","rCountry","sRegion","sSub","sStatus","sCountry","provider","instrument"];
+const S={quarter:lastIdx,amount:200,groupBy:"rRegion"};
+SETKEYS.forEach(k=>S[k]=new Set());
+
+// ---- multi-select component
+let openMS=null;
+function closeOpen(){ if(openMS){ openMS.close(); } }
+document.addEventListener("pointerdown",e=>{ if(openMS && !openMS.root.contains(e.target)) closeOpen(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && openMS){ const b=openMS.btn; closeOpen(); b.focus(); } });
+function MultiSelect(key,label,{search=false}={}){
+  const root=document.getElementById("ms-"+key);
+  const lab=el("span",{id:"lbl-"+key},label);
+  const btn=el("button",{type:"button",class:"ms-btn","aria-haspopup":"true","aria-expanded":"false","aria-labelledby":"lbl-"+key+" val-"+key});
+  const val=el("span",{class:"ms-val",id:"val-"+key},"All"); const caret=el("span",{class:"ms-caret","aria-hidden":"true"},"▼");
+  btn.appendChild(val); btn.appendChild(caret);
+  const panel=el("div",{class:"ms-panel",role:"group","aria-label":label}); panel.hidden=true;
+  let q=null; if(search){ q=el("input",{type:"search",placeholder:"Search…","aria-label":"Search "+label.toLowerCase()}); panel.appendChild(q); }
+  const acts=el("div",{class:"ms-acts"}); const bAll=el("button",{type:"button",class:"ms-act"},"Select shown"); const bClr=el("button",{type:"button",class:"ms-act"},"Clear");
+  acts.appendChild(bAll); acts.appendChild(bClr); panel.appendChild(acts);
+  const list=el("ul",{class:"ms-list"}); panel.appendChild(list);
+  root.appendChild(lab); root.appendChild(btn); root.appendChild(panel);
+  let options=[];
+  const self={root,btn,key,
+    setOptions(opts){ options=opts; const ok=new Set(opts.map(o=>o[0])); for(const v of [...S[key]]) if(!ok.has(v)) S[key].delete(v); self.renderList(); self.renderBtn(); },
+    label, selectedLabels(){ return [...S[key]].map(v=>{ const o=options.find(o=>o[0]===v); return o?o[1]:String(v); }); },
+    renderBtn(){ const sel=S[key]; if(!sel.size){ val.textContent="All"; val.classList.remove("on"); }
+      else if(sel.size===1){ const v=[...sel][0]; const o=options.find(o=>o[0]===v); val.textContent=o?o[1]:String(v); val.classList.add("on"); }
+      else { val.textContent=sel.size+" selected"; val.classList.add("on"); } },
+    shown(){ const s=q?q.value.trim().toLowerCase():""; return s?options.filter(o=>o[1].toLowerCase().includes(s)):options; },
+    renderList(){ list.textContent=""; const sh=self.shown();
+      if(!sh.length){ list.appendChild(el("li",{class:"ms-empty"},"No matches")); return; }
+      sh.forEach(([v,l])=>{ const li=el("li"); const lb=el("label"); const cb=el("input",{type:"checkbox"}); cb.checked=S[key].has(v);
+        cb.addEventListener("change",()=>{ if(cb.checked) S[key].add(v); else S[key].delete(v); self.renderBtn(); onFilterChange(key); });
+        lb.appendChild(cb); lb.appendChild(el("span",{},l)); li.appendChild(lb); list.appendChild(li); }); },
+    open(){ closeOpen(); panel.hidden=false; btn.setAttribute("aria-expanded","true"); openMS=self;
+      panel.classList.remove("right"); const r=panel.getBoundingClientRect(); if(r.right>window.innerWidth-16) panel.classList.add("right");
+      (q||list.querySelector("input")||btn).focus(); },
+    close(){ panel.hidden=true; btn.setAttribute("aria-expanded","false"); if(q) q.value=""; if(openMS===self) openMS=null; self.renderList(); }
+  };
+  btn.addEventListener("click",()=>{ panel.hidden?self.open():self.close(); });
+  if(q) q.addEventListener("input",()=>self.renderList());
+  bAll.addEventListener("click",()=>{ self.shown().forEach(o=>S[key].add(o[0])); self.renderList(); self.renderBtn(); onFilterChange(key); });
+  bClr.addEventListener("click",()=>{ S[key].clear(); self.renderList(); self.renderBtn(); onFilterChange(key); });
+  return self;
+}
+const MS={
+  rRegion:MultiSelect("rRegion","Region"), rSub:MultiSelect("rSub","Subregion"), rStatus:MultiSelect("rStatus","Development status"), rCountry:MultiSelect("rCountry","Country",{search:true}),
+  sRegion:MultiSelect("sRegion","Region"), sSub:MultiSelect("sSub","Subregion"), sStatus:MultiSelect("sStatus","Development status"), sCountry:MultiSelect("sCountry","Country",{search:true}),
+  provider:MultiSelect("provider","Provider type"), instrument:MultiSelect("instrument","Payment instrument")
+};
+
+// ---- filtering
+const inSet=(set,v)=>!set.size||set.has(v);
+function okCountry(c,side,skipCountry){
+  return inSet(S[side+"Region"],c[2]) && inSet(S[side+"Sub"],c[3]) && inSet(S[side+"Status"],c[4]) && (skipCountry||inSet(S[side+"Country"],c[0]));
+}
+let rOK=[], sOK=[];
+function computeMasks(){ rOK=RCV.map(c=>okCountry(c,"r")); sOK=SND.map(c=>okCountry(c,"s")); }
+function match(r,skip={}){
+  if(!rOK[r[2]]||!sOK[r[1]]) return false;
+  if(!skip.provider && !inSet(S.provider,r[3])) return false;
+  if(!skip.instrument && !inSet(S.instrument,r[4])) return false;
+  return true;
+}
+const avg=(s,n)=>n>0?s/n:null;
+const LAST={};
+const byLabel=a=>a.sort((x,y)=>x[1].localeCompare(y[1]));
+
+function buildSide(side,list){
+  MS[side+"Region"].setOptions(byLabel([...new Set(list.map(c=>c[2]))].map(v=>[v,nm(v)])));
+  MS[side+"Sub"].setOptions(byLabel([...new Set(list.filter(c=>inSet(S[side+"Region"],c[2])).map(c=>c[3]))].map(v=>[v,nm(v)])));
+  MS[side+"Status"].setOptions([...new Set(list.map(c=>c[4]))].sort((a,b)=>STATUS_ORDER.indexOf(a)-STATUS_ORDER.indexOf(b)).map(v=>[v,nm(v)]));
+  MS[side+"Country"].setOptions(byLabel(list.filter(c=>okCountry(c,side,true)).map(c=>[c[0],c[1]])));
+}
+function fillSelect(sel,opts,value){
+  sel.textContent=""; for(const [v,l] of opts) sel.appendChild(el("option",{value:String(v)},l));
+  if(!opts.some(o=>String(o[0])===String(value))) value=opts[0][0];
+  sel.value=String(value); return value;
+}
+function buildFilters(){
+  buildSide("r",RCV); buildSide("s",SND);
+  MS.provider.setOptions(D.providerTypes.map((p,i)=>[i,nm(p)]).filter(([i])=>rows.some(r=>r[3]===i)));
+  MS.instrument.setOptions(D.instruments.map((p,i)=>[i,nm(p)]).filter(([i])=>rows.some(r=>r[4]===i)));
+  S.quarter=+fillSelect(document.getElementById("fQuarter"),P.map((p,i)=>[i,qLabel(p)]).filter(([i])=>!missing.has(i)).reverse(),S.quarter);
+  S.amount=+fillSelect(document.getElementById("fAmount"),[[200,"USD 200"],[500,"USD 500"]],S.amount);
+  S.groupBy=fillSelect(document.getElementById("groupBy"),GB.map(g=>[g[0],g[1]]),S.groupBy);
+  computeMasks();
+}
+let rt2;
+function onFilterChange(key){
+  // cascade: rebuild dependent option lists, keep the open panel open
+  const side=key[0];
+  if(key.endsWith("Region")||key.endsWith("Sub")||key.endsWith("Status")){
+    if(key.endsWith("Region")) MS[side+"Sub"].setOptions(byLabel([...new Set((side==="r"?RCV:SND).filter(c=>inSet(S[side+"Region"],c[2])).map(c=>c[3]))].map(v=>[v,nm(v)])));
+    MS[side+"Country"].setOptions(byLabel((side==="r"?RCV:SND).filter(c=>okCountry(c,side,true)).map(c=>[c[0],c[1]])));
+  }
+  computeMasks();
+  clearTimeout(rt2); rt2=setTimeout(renderAll,60);
+}
+
+// ---- tooltip
+function makeTip(c){ let tip=c.querySelector(".tooltip"); if(!tip){ tip=el("div",{class:"tooltip",role:"status"}); c.appendChild(tip);} return tip; }
+function placeTip(tip,c,x,y){ const cw=c.clientWidth,tw=tip.offsetWidth,th=tip.offsetHeight; let l=x+14; if(l+tw>cw) l=x-tw-14; if(l<0) l=0; let tp=y-th-10+c.scrollTop; if(tp<c.scrollTop) tp=y+14+c.scrollTop; tip.style.left=l+"px"; tip.style.top=tp+"px"; tip.style.opacity=1; }
+function tipRow(color,value,label){ const r=el("div",{class:"row"}); if(color){const k=el("span",{class:"key"}); k.style.background=color; r.appendChild(k);} r.appendChild(el("b",{},value)); r.appendChild(el("span",{class:"muted"},label)); return r; }
+
+// ---- line chart
+function renderLine(){
+  const host=document.getElementById("lineChart");
+  const ser=P.map(()=>({s1:0,n1:0,s2:0,n2:0}));
+  for(const r of rows){ if(!match(r)) continue; const a=ser[r[0]]; a.n1+=r[5]; a.s1+=r[6]; a.n2+=r[7]; a.s2+=r[8]; }
+  const v200=ser.map(a=>avg(a.s1,a.n1)), v500=ser.map(a=>avg(a.s2,a.n2)), nS=ser.map(a=>a.n1);
+  LAST.line={v200,v500,n1:nS,n2:ser.map(a=>a.n2)};
+  host.textContent="";
+  const lg=document.getElementById("lineLegend"); lg.textContent="";
+  [["--series-1","USD 200"],["--series-2","USD 500"]].forEach(([c,l])=>{const s=el("span"); const k=el("span",{class:"key"}); k.style.background=`var(${c})`; s.appendChild(k); s.appendChild(document.createTextNode(l)); lg.appendChild(s);});
+  const ds=el("span"); ds.appendChild(el("span",{class:"key dash"})); ds.appendChild(document.createTextNode("SDG target 3%")); lg.appendChild(ds);
+  renderLineTable(v200,v500,nS);
+  const all=[...v200,...v500].filter(v=>v!=null);
+  if(!all.length){ host.appendChild(el("div",{class:"empty"},"No data for this selection.")); return; }
+  const W=Math.max(320,host.clientWidth||900), H=Math.round(Math.min(360,Math.max(240,W*0.36)));
+  const m={l:44,r:70,t:12,b:34};
+  const raw=Math.max(3,...all)*1.03, step=raw>16?5:raw>12?4:raw>6?2:1, nice=Math.ceil(raw/step)*step;
+  const x=i=>m.l+(i/(P.length-1))*(W-m.l-m.r), y=v=>m.t+(1-v/nice)*(H-m.t-m.b);
+  const svg=sv("svg",{viewBox:`0 0 ${W} ${H}`,role:"img",tabindex:"0","aria-label":"Average cost by quarter"});
+  for(let g=0;g<=nice;g+=step){ svg.appendChild(sv("line",{x1:m.l,x2:W-m.r,y1:y(g),y2:y(g),stroke:css("--grid"),"stroke-width":1}));
+    const tx=sv("text",{x:m.l-8,y:y(g)+4,"text-anchor":"end","font-size":11,fill:css("--text-muted")}); tx.textContent=g+"%"; svg.appendChild(tx); }
+  svg.appendChild(sv("line",{x1:m.l,x2:W-m.r,y1:y(0),y2:y(0),stroke:css("--axis"),"stroke-width":1}));
+  const perYear=(W-m.l-m.r)/(P.length/4), yStep=perYear<46?2:1;
+  P.forEach((p,i)=>{ if((p.endsWith("1Q")||i===0)&&(+p.slice(0,4)-2016)%yStep===0){ const yr=yStep>1?"'"+p.slice(2,4):p.slice(0,4);
+    svg.appendChild(sv("line",{x1:x(i),x2:x(i),y1:y(0),y2:y(0)+4,stroke:css("--axis")}));
+    const tx=sv("text",{x:x(i),y:H-m.b+18,"text-anchor":"middle","font-size":11,fill:css("--text-muted")}); tx.textContent=yr; svg.appendChild(tx);} });
+  svg.appendChild(sv("line",{x1:m.l,x2:W-m.r,y1:y(3),y2:y(3),stroke:css("--ref"),"stroke-width":1.5,"stroke-dasharray":"5 4"}));
+  const path=vals=>{ let d="",pen=false; vals.forEach((v,i)=>{ if(v==null){pen=false;return;} d+=(pen?"L":"M")+x(i).toFixed(1)+" "+y(v).toFixed(1); pen=true; }); return d; };
+  [[v500,"--series-2"],[v200,"--series-1"]].forEach(([vals,c])=>{
+    svg.appendChild(sv("path",{d:path(vals),fill:"none",stroke:css(c),"stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round"}));
+    vals.forEach((v,i)=>{ if(v!=null&&(i===0||vals[i-1]==null)&&(i===vals.length-1||vals[i+1]==null)) svg.appendChild(sv("circle",{cx:x(i),cy:y(v),r:4,fill:css(c),stroke:css("--surface-1"),"stroke-width":2})); });
+  });
+  missing.forEach(i=>{ const tx=sv("text",{x:x(i),y:y(0)-6,"text-anchor":"middle","font-size":10,fill:css("--text-muted")}); tx.textContent="n/a"; svg.appendChild(tx); });
+  const labels=[[v200,"--series-1","USD 200"],[v500,"--series-2","USD 500"]].map(([vals,c,l])=>{ let i=vals.length-1; while(i>=0&&vals[i]==null)i--; return i<0?null:{i,v:vals[i],c,l}; }).filter(Boolean);
+  labels.sort((a,b)=>y(a.v)-y(b.v)); let lastY=-1e9;
+  labels.forEach(L=>{ let ly=y(L.v)+4; if(ly-lastY<14) ly=lastY+14; lastY=ly;
+    svg.appendChild(sv("circle",{cx:x(L.i),cy:y(L.v),r:4,fill:css(L.c),stroke:css("--surface-1"),"stroke-width":2}));
+    const tx=sv("text",{x:x(L.i)+8,y:ly,"font-size":11,fill:css("--text-secondary")}); tx.textContent=L.l; svg.appendChild(tx); });
+  const cross=sv("line",{y1:m.t,y2:y(0),stroke:css("--axis"),"stroke-width":1,opacity:0}); svg.appendChild(cross);
+  const d1=sv("circle",{r:4,fill:css("--series-1"),stroke:css("--surface-1"),"stroke-width":2,opacity:0}), d2=sv("circle",{r:4,fill:css("--series-2"),stroke:css("--surface-1"),"stroke-width":2,opacity:0});
+  svg.appendChild(d1); svg.appendChild(d2);
+  svg.appendChild(sv("rect",{x:m.l,y:m.t,width:W-m.l-m.r,height:y(0)-m.t,fill:"transparent"}));
+  host.appendChild(svg);
+  const tip=makeTip(host); let cur=-1;
+  function show(i){
+    cur=i; const k=host.clientWidth/W;
+    cross.setAttribute("x1",x(i)); cross.setAttribute("x2",x(i)); cross.setAttribute("opacity",1);
+    [[d1,v200],[d2,v500]].forEach(([dd,v])=>{ if(v[i]==null) dd.setAttribute("opacity",0); else { dd.setAttribute("cx",x(i)); dd.setAttribute("cy",y(v[i])); dd.setAttribute("opacity",1);} });
+    tip.textContent=""; tip.appendChild(el("div",{class:"t"},qLabel(P[i])));
+    if(v200[i]==null) tip.appendChild(el("div",{class:"muted"},missing.has(i)?"No data published":"No data for this selection"));
+    else { tip.appendChild(tipRow(css("--series-1"),fmt(v200[i])+"%","USD 200")); tip.appendChild(tipRow(css("--series-2"),fmt(v500[i])+"%","USD 500")); tip.appendChild(el("div",{class:"muted"},fmtInt(nS[i])+" services")); }
+    placeTip(tip,host,x(i)*k,(v200[i]!=null?y(v200[i]):y(nice/2))*k);
+  }
+  function hide(){ cross.setAttribute("opacity",0); d1.setAttribute("opacity",0); d2.setAttribute("opacity",0); tip.style.opacity=0; }
+  svg.addEventListener("pointermove",e=>{ const r=svg.getBoundingClientRect(); const sx=(e.clientX-r.left)*W/r.width; show(Math.max(0,Math.min(P.length-1,Math.round((sx-m.l)/(W-m.l-m.r)*(P.length-1))))); });
+  svg.addEventListener("pointerleave",hide); svg.addEventListener("blur",hide);
+  svg.addEventListener("focus",()=>show(cur<0?lastIdx:cur));
+  svg.addEventListener("keydown",e=>{ const c0=cur<0?lastIdx:cur; if(e.key==="ArrowLeft"){show(Math.max(0,c0-1));e.preventDefault();} if(e.key==="ArrowRight"){show(Math.min(P.length-1,c0+1));e.preventDefault();} });
+}
+function renderLineTable(v200,v500,nS){
+  const wrap=document.getElementById("lineTableWrap"); wrap.textContent="";
+  const tw=el("div",{class:"tablewrap"}), tb=el("table"), hr=el("tr");
+  [["Quarter",""],["Cost USD 200","num"],["Cost USD 500","num"],["Services","num"]].forEach(([h,c])=>hr.appendChild(el("th",c?{class:c}:{},h)));
+  const th=el("thead"); th.appendChild(hr); tb.appendChild(th); const body=el("tbody");
+  P.forEach((p,i)=>{ const tr=el("tr"); tr.appendChild(el("td",{},qLabel(p)));
+    tr.appendChild(el("td",{class:"num"},v200[i]==null?"–":fmt(v200[i])+"%")); tr.appendChild(el("td",{class:"num"},v500[i]==null?"–":fmt(v500[i])+"%"));
+    tr.appendChild(el("td",{class:"num"},nS[i]?fmtInt(nS[i]):"–")); body.appendChild(tr); });
+  tb.appendChild(body); tw.appendChild(tb); wrap.appendChild(tw);
+}
+
+// ---- bars
+function renderBars(hostId,items,title){
+  const host=document.getElementById(hostId); host.textContent="";
+  if(!items.length){ host.appendChild(el("div",{class:"empty"},"No data for this selection.")); return; }
+  items.sort((a,b)=>b.v-a.v);
+  const W=Math.max(300,host.clientWidth||520), rowH=24, m={l:Math.min(200,Math.round(W*0.4)),r:58,t:8,b:24};
+  const H=m.t+m.b+items.length*rowH;
+  const vmax=Math.max(3,...items.map(d=>d.v)), nice=Math.ceil(vmax*1.05), step=nice>40?10:nice>16?5:nice>12?4:nice>6?2:1;
+  const x=v=>m.l+(Math.max(0,v)/nice)*(W-m.l-m.r);
+  const svg=sv("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":title});
+  for(let g=0;g<=nice;g+=step){ svg.appendChild(sv("line",{x1:x(g),x2:x(g),y1:m.t,y2:H-m.b,stroke:css("--grid")}));
+    const tx=sv("text",{x:x(g),y:H-m.b+16,"text-anchor":"middle","font-size":11,fill:css("--text-muted")}); tx.textContent=g+"%"; svg.appendChild(tx); }
+  const color=css(S.amount===200?"--series-1":"--series-2"), tip=makeTip(host);
+  items.forEach((d,k)=>{
+    const yy=m.t+k*rowH, bh=14, by=yy+(rowH-bh)/2, w=Math.max(1,x(d.v)-m.l), rr=Math.min(4,w);
+    const lab=sv("text",{x:m.l-8,y:yy+rowH/2+4,"text-anchor":"end","font-size":12,fill:css("--text-secondary")});
+    let name=d.label; const maxCh=Math.max(10,Math.floor(m.l/7)); if(name.length>maxCh) name=name.slice(0,maxCh-1)+"…"; lab.textContent=name; svg.appendChild(lab);
+    const p=sv("path",{d:`M${m.l} ${by}H${m.l+w-rr}a${rr} ${rr} 0 0 1 ${rr} ${rr}V${by+bh-rr}a${rr} ${rr} 0 0 1 -${rr} ${rr}H${m.l}Z`,fill:color}); svg.appendChild(p);
+    const vt=sv("text",{x:m.l+w+6,y:yy+rowH/2+4,"font-size":11,fill:css("--text-secondary")}); vt.textContent=fmt(d.v)+"%"; svg.appendChild(vt);
+    const hit=sv("rect",{x:0,y:yy,width:W,height:rowH,fill:"transparent",tabindex:"0","aria-label":d.label+": "+fmt(d.v)+"%"});
+    const k2=()=>host.clientWidth/W;
+    const show=()=>{ p.setAttribute("opacity",.8); tip.textContent=""; tip.appendChild(el("div",{class:"t"},d.label)); tip.appendChild(tipRow(color,fmt(d.v)+"%",S.amount===200?"USD 200":"USD 500")); tip.appendChild(el("div",{class:"muted"},fmtInt(d.n)+" services")); placeTip(tip,host,(m.l+w)*k2(),(yy+rowH/2)*k2()-host.scrollTop); };
+    const hide=()=>{ p.setAttribute("opacity",1); tip.style.opacity=0; };
+    hit.addEventListener("pointermove",show); hit.addEventListener("pointerleave",hide); hit.addEventListener("focus",show); hit.addEventListener("blur",hide);
+    svg.appendChild(hit);
+  });
+  svg.appendChild(sv("line",{x1:x(3),x2:x(3),y1:m.t,y2:H-m.b,stroke:css("--ref"),"stroke-width":1.5,"stroke-dasharray":"5 4"}));
+  svg.appendChild(sv("line",{x1:m.l,x2:m.l,y1:m.t,y2:H-m.b,stroke:css("--axis")}));
+  host.appendChild(svg);
+}
+const GB=[["rRegion","Receiving region"],["rSub","Receiving subregion"],["rStatus","Receiving status"],["rCountry","Receiving country"],
+          ["sRegion","Sending region"],["sSub","Sending subregion"],["sStatus","Sending status"],["sCountry","Sending country"]];
+function keyOf(r){
+  const g=S.groupBy, c=g[0]==="r"?RCV[r[2]]:SND[r[1]], f=g.slice(1);
+  if(f==="Region") return [c[2],nm(c[2])];
+  if(f==="Sub") return [c[3],nm(c[3])];
+  if(f==="Status") return [c[4],nm(c[4])];
+  return [c[0],c[1]];
+}
+function renderBreakdowns(){
+  const q=+S.quarter, a=S.amount, si=a===200?6:8, ni=a===200?5:7;
+  const note=`${qLabel(P[q])}, sending USD ${a}. Highest to lowest cost.`;
+  const agg=new Map();
+  for(const r of rows){ if(r[0]!==q||!match(r)) continue; const [k,label]=keyOf(r); const o=agg.get(k)||{s:0,n:0,label}; o.s+=r[si]; o.n+=r[ni]; agg.set(k,o); }
+  const bt="Average cost by "+GB.find(g=>g[0]===S.groupBy)[1].toLowerCase();
+  document.getElementById("barTitle").textContent=bt; document.getElementById("barNote").textContent=note;
+  const barItems=[...agg.values()].filter(o=>o.n>0).map(o=>({label:o.label,v:o.s/o.n,n:o.n}));
+  LAST.bar={title:bt,group:GB.find(g=>g[0]===S.groupBy)[1],items:barItems};
+  renderBars("barChart",barItems.slice(),bt);
+  const ag2=new Map(), ag3=new Map();
+  for(const r of rows){ if(r[0]!==q) continue;
+    if(match(r,{instrument:true})){ const o=ag2.get(r[4])||{s:0,n:0}; o.s+=r[si]; o.n+=r[ni]; ag2.set(r[4],o); }
+    if(match(r,{provider:true})){ const o=ag3.get(r[3])||{s:0,n:0}; o.s+=r[si]; o.n+=r[ni]; ag3.set(r[3],o); } }
+  document.getElementById("instNote").textContent=note;
+  const instItems=[...ag2].filter(([,o])=>o.n>0).map(([k,o])=>({label:nm(D.instruments[k]),v:o.s/o.n,n:o.n}));
+  const provItems=[...ag3].filter(([,o])=>o.n>0).map(([k,o])=>({label:nm(D.providerTypes[k]),v:o.s/o.n,n:o.n}));
+  LAST.inst={title:"Average cost by payment instrument",group:"Payment instrument",items:instItems};
+  LAST.prov={title:"Average cost by provider type",group:"Provider type",items:provItems};
+  renderBars("instChart",instItems.slice(),"By payment instrument");
+  renderBars("provChart",provItems.slice(),"By provider type");
+}
+
+// ---- tiles
+function renderTiles(){
+  const q=+S.quarter, a=S.amount, si=a===200?6:8, ni=a===200?5:7;
+  let s=0,n=0,sp=0,np=0; const corr=new Set(), rc=new Set(), sc=new Set();
+  const prev=P.indexOf((+P[q].slice(0,4)-1)+P[q].slice(4));
+  for(const r of rows){ if(!match(r)) continue;
+    if(r[0]===q){ s+=r[si]; n+=r[ni]; corr.add(r[1]+"-"+r[2]); rc.add(r[2]); sc.add(r[1]); }
+    if(r[0]===prev){ sp+=r[si]; np+=r[ni]; } }
+  const v=avg(s,n), vp=avg(sp,np);
+  document.getElementById("tk1").textContent="Average cost · USD "+a;
+  document.getElementById("tv1").textContent=v==null?"–":fmt(v)+"%";
+  document.getElementById("td1").textContent=qLabel(P[q]);
+  const tv2=document.getElementById("tv2");
+  if(v==null||vp==null){ tv2.textContent="–"; tv2.style.color=""; document.getElementById("td2").textContent="no data a year earlier"; }
+  else { const dl=v-vp; tv2.textContent=(dl>0?"▲ +":dl<0?"▼ ":"")+fmt(dl)+" pp"; tv2.style.color=dl>0?"var(--up)":dl<0?"var(--down)":"";
+    document.getElementById("td2").textContent="vs "+qLabel(P[prev])+" ("+fmt(vp)+"%)"; }
+  document.getElementById("tv3").textContent=n?fmtInt(n):"–";
+  document.getElementById("td3").textContent=corr.size?fmtInt(corr.size)+" corridors":"";
+  document.getElementById("tv4").textContent=v==null?"–":"×"+fmt(v/3,1);
+  document.getElementById("td4").textContent=v==null?"":"cost is "+fmt(v/3,1)+" times the target";
+  document.getElementById("selSummary").textContent=`Selection: ${fmtInt(rc.size)} receiving and ${fmtInt(sc.size)} sending countries with data in ${qLabel(P[q])}.`;
+}
+
+// ---- table
+let sortKey="avg200", sortDir=-1;
+function renderTable(){
+  const q=+S.quarter, m=new Map();
+  for(const r of rows){ if(r[0]!==q||!match(r)) continue; const k=r[1]+"-"+r[2];
+    const o=m.get(k)||{s:r[1],d:r[2],n1:0,s1:0,n2:0,s2:0,mn:Infinity}; o.n1+=r[5]; o.s1+=r[6]; o.n2+=r[7]; o.s2+=r[8]; if(r[9]!=null&&r[9]<o.mn)o.mn=r[9]; m.set(k,o); }
+  let list=[...m.values()].map(o=>({sender:SND[o.s][1],sSub:nm(SND[o.s][3]),receiver:RCV[o.d][1],rSub:nm(RCV[o.d][3]),n:o.n1,avg200:avg(o.s1,o.n1),avg500:avg(o.s2,o.n2),min:o.mn===Infinity?null:o.mn}));
+  const qs=document.getElementById("search").value.trim().toLowerCase();
+  if(qs) list=list.filter(o=>(o.sender+" "+o.receiver+" "+o.sSub+" "+o.rSub).toLowerCase().includes(qs));
+  list.sort((a,b)=>{ const x=a[sortKey],y=b[sortKey]; if(typeof x==="string") return sortDir*x.localeCompare(y); return sortDir*((x??-1e9)-(y??-1e9)); });
+  LAST.table={list,search:qs};
+  document.getElementById("tableTitle").textContent="Corridors in "+qLabel(P[q]);
+  document.getElementById("tableCount").textContent=fmtInt(list.length)+" corridors";
+  const tb=document.getElementById("corrTable"); tb.textContent="";
+  const cols=[["sender","Sender",""],["sSub","Sender subregion",""],["receiver","Receiver",""],["rSub","Receiver subregion",""],["n","Services","num"],["avg200","Cost USD 200","num"],["avg500","Cost USD 500","num"],["min","Cheapest (USD 200)","num"]];
+  const thead=el("thead"), hr=el("tr");
+  cols.forEach(([k,l,c])=>{ const th=el("th",c?{class:c}:{}); th.setAttribute("aria-sort",sortKey===k?(sortDir>0?"ascending":"descending"):"none");
+    const b=el("button",{},l+(sortKey===k?(sortDir>0?" ▲":" ▼"):"")); b.addEventListener("click",()=>{ if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=c?-1:1;} renderTable(); }); th.appendChild(b); hr.appendChild(th); });
+  thead.appendChild(hr); tb.appendChild(thead);
+  const body=el("tbody");
+  if(!list.length){ const tr=el("tr"); tr.appendChild(el("td",{colspan:"8",class:"empty"},"No data for this selection.")); body.appendChild(tr); }
+  list.forEach(o=>{ const tr=el("tr");
+    [o.sender,o.sSub,o.receiver,o.rSub].forEach(v=>tr.appendChild(el("td",{},v)));
+    tr.appendChild(el("td",{class:"num"},fmtInt(o.n)));
+    tr.appendChild(el("td",{class:"num"},o.avg200==null?"–":fmt(o.avg200)+"%"));
+    tr.appendChild(el("td",{class:"num"},o.avg500==null?"–":fmt(o.avg500)+"%"));
+    tr.appendChild(el("td",{class:"num"},o.min==null?"–":fmt(o.min)+"%"));
+    body.appendChild(tr); });
+  tb.appendChild(body);
+}
+
+function renderAll(){ renderTiles(); renderLine(); renderBreakdowns(); renderTable(); }
+
+// ---- PNG export
+const FILTER_NAMES={rRegion:"Receiving region",rSub:"Receiving subregion",rStatus:"Receiving status",rCountry:"Receiving country",
+  sRegion:"Sending region",sSub:"Sending subregion",sStatus:"Sending status",sCountry:"Sending country",provider:"Provider type",instrument:"Payment instrument"};
+function describeFilters(){
+  const parts=SETKEYS.filter(k=>S[k].size).map(k=>{ const l=MS[k].selectedLabels(); const shown=l.length>4?l.slice(0,4).join(", ")+` +${l.length-4} more`:l.join(", "); return FILTER_NAMES[k]+": "+shown; });
+  return parts.length?parts.join(" · "):"All corridors (no filters)";
+}
+function wrapText(ctx,text,maxW){
+  const words=text.split(" "), lines=[]; let line="";
+  for(const w of words){ const tst=line?line+" "+w:w; if(ctx.measureText(tst).width>maxW&&line){ lines.push(line); line=w; } else line=tst; }
+  if(line) lines.push(line); return lines;
+}
+async function saveBlob(blob,filename){
+  const use=window.claude&&window.claude.use;
+  if(use){
+    const dl=await window.claude.use("downloads");
+    if(dl){ try{ await dl.save({filename,data:blob}); return "saved"; } catch(e){ return (e&&e.code)||"error"; } }
+    return "unavailable";
+  }
+  const url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),2000); return "saved";
+}
+async function exportChart(kind,btn){
+  const root=document.documentElement, prev=root.getAttribute("data-theme");
+  const old=btn.textContent; btn.textContent="Preparing…"; btn.disabled=true;
+  try{
+    root.setAttribute("data-theme","light");
+    let hostId, title, sub, legend;
+    const q=qLabel(P[+S.quarter]), amt="USD "+S.amount;
+    if(kind==="line"){ renderLine(); hostId="lineChart"; title="Average cost of sending remittances, by quarter";
+      sub="Simple average of transparent services, "+qLabel(P[0])+" to "+qLabel(P[P.length-1])+". Q2 2025 not published.";
+      legend=[["line",css("--series-1"),"USD 200"],["line",css("--series-2"),"USD 500"],["dash",css("--ref"),"SDG target 3%"]]; }
+    else { renderBreakdowns(); hostId={bar:"barChart",inst:"instChart",prov:"provChart"}[kind];
+      title={bar:document.getElementById("barTitle").textContent,inst:"Average cost by payment instrument",prov:"Average cost by provider type"}[kind];
+      sub=q+", sending "+amt+". Simple average of transparent services.";
+      legend=[["bar",css(S.amount===200?"--series-1":"--series-2"),amt],["dash",css("--ref"),"SDG target 3%"]]; }
+    const svg=document.getElementById(hostId).querySelector("svg");
+    if(!svg) throw {code:"empty"};
+    const W=svg.viewBox.baseVal.width, H=svg.viewBox.baseVal.height;
+    const clone=svg.cloneNode(true);
+    clone.setAttribute("xmlns",SVGNS); clone.setAttribute("width",W); clone.setAttribute("height",H);
+    clone.setAttribute("font-family","system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif");
+    clone.querySelectorAll('[opacity="0"]').forEach(n=>n.remove());
+    const col={bg:"#ffffff",tp:css("--text-primary"),ts:css("--text-secondary"),tm:css("--text-muted"),rule:css("--rule")};
+    const xml=new XMLSerializer().serializeToString(clone);
+    const url=URL.createObjectURL(new Blob([xml],{type:"image/svg+xml;charset=utf-8"}));
+    const img=new Image();
+    await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=url; });
+    const sc=2, pad=24, cw=Math.max(W,560)+pad*2, font="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    const cv=document.createElement("canvas"), ctx=cv.getContext("2d");
+    ctx.font="12px "+font;
+    const subLines=wrapText(ctx,sub,cw-pad*2), filtLines=wrapText(ctx,describeFilters(),cw-pad*2);
+    ctx.font="11px "+font;
+    const srcLines=wrapText(ctx,"Source: World Bank, Remittance Prices Worldwide (RPW), CC BY 4.0. Regions: UN WESP Annex. Not volume-weighted.",cw-pad*2);
+    const ch=pad+24+subLines.length*16+filtLines.length*16+10+22+H+14+srcLines.length*15+pad;
+    cv.width=cw*sc; cv.height=ch*sc; ctx.scale(sc,sc);
+    ctx.fillStyle=col.bg; ctx.fillRect(0,0,cw,ch);
+    let y=pad+16;
+    ctx.fillStyle=col.tp; ctx.font="600 17px "+font; ctx.fillText(title,pad,y); y+=22;
+    ctx.font="12px "+font; ctx.fillStyle=col.ts; subLines.forEach(l=>{ ctx.fillText(l,pad,y); y+=16; });
+    ctx.fillStyle=col.tm; filtLines.forEach(l=>{ ctx.fillText(l,pad,y); y+=16; });
+    y+=8; let x=pad; ctx.font="12px "+font;
+    legend.forEach(([type,c,l])=>{
+      ctx.strokeStyle=c; ctx.fillStyle=c; ctx.lineWidth=2;
+      if(type==="bar"){ ctx.fillRect(x,y-8,12,8); }
+      else { ctx.setLineDash(type==="dash"?[5,4]:[]); ctx.beginPath(); ctx.moveTo(x,y-4); ctx.lineTo(x+16,y-4); ctx.stroke(); ctx.setLineDash([]); }
+      ctx.fillStyle=col.ts; ctx.fillText(l,x+22,y); x+=22+ctx.measureText(l).width+18; });
+    y+=14;
+    ctx.drawImage(img,pad,y,W,H); URL.revokeObjectURL(url); y+=H+12;
+    ctx.strokeStyle=col.rule; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(cw-pad,y); ctx.stroke(); y+=14;
+    ctx.font="11px "+font; ctx.fillStyle=col.tm; srcLines.forEach(l=>{ ctx.fillText(l,pad,y); y+=15; });
+    const blob=await new Promise(res=>cv.toBlob(res,"image/png"));
+    if(prev) root.setAttribute("data-theme",prev); else root.removeAttribute("data-theme");
+    renderAll();
+    const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+    const fname=kind==="line"?"remittance-cost-by-quarter.png":`${slug(title)}-${slug(q)}-usd${S.amount}.png`;
+    const r=await saveBlob(blob,fname);
+    btn.textContent= r==="saved"?"Saved":r==="declined"?"Download PNG":r==="unavailable"?"Download not available here":"Download failed";
+  } catch(e){
+    if(prev) root.setAttribute("data-theme",prev); else root.removeAttribute("data-theme");
+    renderAll(); btn.textContent=(e&&e.code==="empty")?"No chart to save":"Download failed";
+  }
+  btn.disabled=false; setTimeout(()=>{ btn.textContent=old; },2200);
+}
+document.querySelectorAll("[data-export]").forEach(b=>b.addEventListener("click",()=>exportChart(b.getAttribute("data-export"),b)));
+
+// ---- Excel export (per chart / table) and full dataset
+const r4=v=>v==null?null:Math.round(v*10000)/10000;
+function aboutRows(title,scope){
+  return [["Remittance Cost Viewer: "+title],[],
+    ["Scope",scope],["Filters",describeFilters()],
+    ["Measure","Total cost (fee + FX margin) as % of the amount sent. Simple average across transparent services (World Bank SDG 10.c.1 method). Not volume-weighted."],
+    ["Source","World Bank, Remittance Prices Worldwide (RPW), sheet 'Dataset (from Q2 2016)'. License CC BY 4.0. https://remittanceprices.worldbank.org"],
+    ["Regions","UN World Economic Situation and Prospects (WESP) Annex. Where a country has no subregion, its region is used."],
+    ["Notes","Q2 2025 was not published by the World Bank. 2024 Q3 and Q4 values were stored as text in the original file and converted to numbers."],
+    ["Exported",new Date().toISOString().slice(0,10)]];
+}
+function sheetFrom(aoa,widths){ const ws=XLSX.utils.aoa_to_sheet(aoa); if(widths) ws["!cols"]=widths.map(w=>({wch:w})); return ws; }
+function buildWorkbook(kind){
+  const q=qLabel(P[+S.quarter]), amt="USD "+S.amount;
+  let data, title, scope, fname, widths;
+  if(kind==="line"){ const L=LAST.line; title="Average cost by quarter"; scope="Q2 2016 to Q3 2025, USD 200 and USD 500";
+    data=[["Quarter","Average cost % (USD 200)","Average cost % (USD 500)","Services (USD 200)","Services (USD 500)"]];
+    P.forEach((p,i)=>data.push([qLabel(p),r4(L.v200[i]),r4(L.v500[i]),L.n1[i]||0,L.n2[i]||0]));
+    fname="remittance-cost-by-quarter.xlsx"; widths=[12,24,24,18,18]; }
+  else if(kind==="table"){ const T=LAST.table; title="Corridors in "+q; scope=q+(T.search?` · search: "${T.search}"`:"");
+    data=[["Sender","Sender subregion","Receiver","Receiver subregion","Services","Average cost % (USD 200)","Average cost % (USD 500)","Cheapest % (USD 200)"]];
+    T.list.forEach(o=>data.push([o.sender,o.sSub,o.receiver,o.rSub,o.n,r4(o.avg200),r4(o.avg500),r4(o.min)]));
+    fname=`remittance-corridors-${q.toLowerCase().replace(/\s+/g,"-")}.xlsx`; widths=[24,22,24,22,10,22,22,20]; }
+  else { const B=LAST[kind]; title=B.title; scope=q+", sending "+amt;
+    data=[[B.group,`Average cost % (${amt})`,"Services"]];
+    B.items.slice().sort((a,b)=>b.v-a.v).forEach(d=>data.push([d.label,r4(d.v),d.n]));
+    fname=`${title.toLowerCase().replace(/[^a-z0-9]+/g,"-")}-${q.toLowerCase().replace(/\s+/g,"-")}-usd${S.amount}.xlsx`; widths=[32,24,12]; }
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,sheetFrom(data,widths),"Data");
+  XLSX.utils.book_append_sheet(wb,sheetFrom(aboutRows(title,scope),[12,120]),"About");
+  return {wb,fname};
+}
+async function exportXlsx(kind,btn){
+  const old=btn.textContent; btn.disabled=true; btn.textContent="Preparing…";
+  try{
+    if(!window.XLSX) throw {code:"nolib"};
+    const {wb,fname}=buildWorkbook(kind);
+    const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"});
+    const r=await saveBlob(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),fname);
+    btn.textContent= r==="saved"?"Saved":r==="declined"?old:r==="extension_not_enabled"?"Excel not available here":r==="unavailable"?"Download not available here":"Download failed";
+  } catch(e){ btn.textContent=(e&&e.code==="nolib")?"Excel library did not load":"Download failed"; }
+  btn.disabled=false; setTimeout(()=>{ btn.textContent=old; },2200);
+}
+document.querySelectorAll("[data-xlsx]").forEach(b=>b.addEventListener("click",()=>exportXlsx(b.getAttribute("data-xlsx"),b)));
+const FULL_FILE="data/rpw_services_2016q2_2025q3.xlsx";
+document.getElementById("dlFull").addEventListener("click",async e=>{
+  const btn=e.currentTarget, old=btn.textContent; btn.disabled=true; btn.textContent="Preparing…";
+  let r;
+  try{
+    if(window.claude&&window.claude.use){ let res=null; try{ res=await fetch(FULL_FILE); }catch(_){}
+      if(!res||!res.ok){ btn.textContent="Available on the GitHub site"; btn.disabled=false; setTimeout(()=>{ btn.textContent=old; },3500); return; }
+      r=await saveBlob(await res.blob(),"rpw_services_2016q2_2025q3.xlsx"); }
+    else { const a=document.createElement("a"); a.href=FULL_FILE; a.download="rpw_services_2016q2_2025q3.xlsx"; document.body.appendChild(a); a.click(); a.remove(); r="saved"; }
+    btn.textContent= r==="saved"?"Download started":r==="declined"?old:r==="unavailable"?"Download not available here":"Download failed";
+  } catch(err){ btn.textContent="Download failed"; }
+  btn.disabled=false; setTimeout(()=>{ btn.textContent=old; },2500);
+});
+
+// ---- wiring
+[["fQuarter","quarter",true],["fAmount","amount",true],["groupBy","groupBy",false]].forEach(([id,key,num])=>{
+  document.getElementById(id).addEventListener("change",e=>{ S[key]=num?+e.target.value:e.target.value; renderAll(); });
+});
+document.getElementById("reset").addEventListener("click",()=>{ closeOpen(); SETKEYS.forEach(k=>S[k].clear()); Object.assign(S,{quarter:lastIdx,amount:200,groupBy:"rRegion"}); document.getElementById("search").value=""; buildFilters(); renderAll(); });
+document.getElementById("search").addEventListener("input",renderTable);
+document.getElementById("toggleLineTable").addEventListener("click",e=>{ const w=document.getElementById("lineTableWrap"); w.hidden=!w.hidden; e.target.setAttribute("aria-expanded",String(!w.hidden)); e.target.textContent=w.hidden?"Show data table":"Hide data table"; });
+document.getElementById("theme").addEventListener("click",()=>{ const root=document.documentElement; const dark=root.getAttribute("data-theme")==="dark"||(!root.getAttribute("data-theme")&&matchMedia("(prefers-color-scheme: dark)").matches); root.setAttribute("data-theme",dark?"light":"dark"); renderAll(); });
+let rt; window.addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(()=>{ renderLine(); renderBreakdowns(); },150); });
+buildFilters(); renderAll();
+})();
+</script>
+</body>
+</html>

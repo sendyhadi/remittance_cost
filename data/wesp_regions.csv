@@ -1,0 +1,180 @@
+ISO,country,region,subregion,development_status
+AFG,Afghanistan,Asia,South Asia,DVG
+AGO,Angola,Africa,Southern Africa,DVG
+ALB,Albania,South-Eastern Europe,,EIT
+ARE,United Arab Emirates,Asia,Western Asia,DVG
+ARG,Argentina,Latin America and the Caribbean,South America,DVG
+ARM,Armenia,Commonwealth of Independent States and Georgia,,EIT
+AUS,Australia,Developed Asia and the Pacific,,DVD
+AUT,Austria,Europe,European Union,DVD
+AZE,Azerbaijan,Commonwealth of Independent States and Georgia,,EIT
+BDI,Burundi,Africa,East Africa,DVG
+BEL,Belgium,Europe,European Union,DVD
+BEN,Benin,Africa,West Africa,DVG
+BFA,Burkina Faso,Africa,West Africa,DVG
+BGD,Bangladesh,Asia,South Asia,DVG
+BGR,Bulgaria,Europe,European Union,DVD
+BHR,Bahrain,Asia,Western Asia,DVG
+BHS,Bahamas,Latin America and the Caribbean,Caribbean,DVG
+BIH,Bosnia and Herzegovina,South-Eastern Europe,,EIT
+BLR,Belarus,Commonwealth of Independent States and Georgia,,EIT
+BLZ,Belize,Latin America and the Caribbean,Caribbean,DVG
+BOL,Bolivia (Plurinational State of),Latin America and the Caribbean,South America,DVG
+BRA,Brazil,Latin America and the Caribbean,South America,DVG
+BRB,Barbados,Latin America and the Caribbean,Caribbean,DVG
+BRN,Brunei Darussalam,Asia,East Asia,DVG
+BTN,Bhutan,Asia,South Asia,DVG
+BWA,Botswana,Africa,Southern Africa,DVG
+CAF,Central African Republic,Africa,Central Africa,DVG
+CAN,Canada,North America,,DVD
+CHE,Switzerland,Europe,Other Europe,DVD
+CHL,Chile,Latin America and the Caribbean,South America,DVG
+CHN,China,Asia,East Asia,DVG
+CIV,Côte d’Ivoire,Africa,West Africa,DVG
+CMR,Cameroon,Africa,Central Africa,DVG
+COD,Democratic Republic of the Congo,Africa,East Africa,DVG
+COG,Congo,Africa,Central Africa,DVG
+COL,Colombia,Latin America and the Caribbean,South America,DVG
+COM,Comoros,Africa,East Africa,DVG
+CPV,Cabo Verde,Africa,West Africa,DVG
+CRI,Costa Rica,Latin America and the Caribbean,Mexico and Central America,DVG
+CUB,Cuba,Latin America and the Caribbean,Mexico and Central America,DVG
+CYP,Cyprus,Europe,European Union,DVD
+CZE,Czechia,Europe,European Union,DVD
+DEU,Germany,Europe,European Union,DVD
+DJI,Djibouti,Africa,East Africa,DVG
+DNK,Denmark,Europe,European Union,DVD
+DOM,Dominican Republic,Latin America and the Caribbean,Mexico and Central America,DVG
+DZA,Algeria,Africa,North Africa,DVG
+ECU,Ecuador,Latin America and the Caribbean,South America,DVG
+EGY,Egypt,Africa,North Africa,DVG
+ERI,Eritrea,Africa,East Africa,DVG
+ESP,Spain,Europe,European Union,DVD
+EST,Estonia,Europe,European Union,DVD
+ETH,Ethiopia,Africa,East Africa,DVG
+FIN,Finland,Europe,European Union,DVD
+FJI,Fiji,Asia,East Asia,DVG
+FRA,France,Europe,European Union,DVD
+GAB,Gabon,Africa,Central Africa,DVG
+GBR,United Kingdom of Great Britain and Northern Ireland,Europe,Other Europe,DVD
+GEO,Georgia,Commonwealth of Independent States and Georgia,,EIT
+GHA,Ghana,Africa,West Africa,DVG
+GIN,Guinea,Africa,West Africa,DVG
+GMB,Gambia,Africa,West Africa,DVG
+GNB,Guinea-Bissau,Africa,West Africa,DVG
+GNQ,Equatorial Guinea,Africa,Central Africa,DVG
+GRC,Greece,Europe,European Union,DVD
+GTM,Guatemala,Latin America and the Caribbean,Mexico and Central America,DVG
+GUY,Guyana,Latin America and the Caribbean,Caribbean,DVG
+HKG,Hong Kong Special Administrative Region of China,Asia,East Asia,DVG
+HND,Honduras,Latin America and the Caribbean,Mexico and Central America,DVG
+HRV,Croatia,Europe,European Union,DVD
+HTI,Haiti,Latin America and the Caribbean,Mexico and Central America,DVG
+HUN,Hungary,Europe,European Union,DVD
+IDN,Indonesia,Asia,East Asia,DVG
+IND,India,Asia,South Asia,DVG
+IRL,Ireland,Europe,European Union,DVD
+IRN,Iran (Islamic Republic of),Asia,South Asia,DVG
+IRQ,Iraq,Asia,Western Asia,DVG
+ISL,Iceland,Europe,Other Europe,DVD
+ISR,Israel,Asia,Western Asia,DVG
+ITA,Italy,Europe,European Union,DVD
+JAM,Jamaica,Latin America and the Caribbean,Caribbean,DVG
+JOR,Jordan,Asia,Western Asia,DVG
+JPN,Japan,Developed Asia and the Pacific,,DVD
+KAZ,Kazakhstan,Commonwealth of Independent States and Georgia,,EIT
+KEN,Kenya,Africa,East Africa,DVG
+KGZ,Kyrgyzstan,Commonwealth of Independent States and Georgia,,EIT
+KHM,Cambodia,Asia,East Asia,DVG
+KIR,Kiribati,Asia,East Asia,DVG
+KOR,Republic of Korea,Developed Asia and the Pacific,,DVD
+KWT,Kuwait,Asia,Western Asia,DVG
+LAO,Lao People’s Democratic Republic,Asia,East Asia,DVG
+LBN,Lebanon,Asia,Western Asia,DVG
+LBR,Liberia,Africa,West Africa,DVG
+LBY,Libya,Africa,North Africa,DVG
+LKA,Sri Lanka,Asia,South Asia,DVG
+LSO,Lesotho,Africa,Southern Africa,DVG
+LTU,Lithuania,Europe,European Union,DVD
+LUX,Luxembourg,Europe,European Union,DVD
+LVA,Latvia,Europe,European Union,DVD
+MAR,Morocco,Africa,North Africa,DVG
+MDA,Republic of Moldova,Commonwealth of Independent States and Georgia,,EIT
+MDG,Madagascar,Africa,East Africa,DVG
+MDV,Maldives,Asia,South Asia,DVG
+MEX,Mexico,Latin America and the Caribbean,Mexico and Central America,DVG
+MKD,North Macedonia,South-Eastern Europe,,EIT
+MLI,Mali,Africa,West Africa,DVG
+MLT,Malta,Europe,European Union,DVD
+MMR,Myanmar,Asia,East Asia,DVG
+MNE,Montenegro,South-Eastern Europe,,EIT
+MNG,Mongolia,Asia,East Asia,DVG
+MOZ,Mozambique,Africa,Southern Africa,DVG
+MRT,Mauritania,Africa,North Africa,DVG
+MUS,Mauritius,Africa,Southern Africa,DVG
+MWI,Malawi,Africa,Southern Africa,DVG
+MYS,Malaysia,Asia,East Asia,DVG
+NAM,Namibia,Africa,Southern Africa,DVG
+NER,Niger,Africa,West Africa,DVG
+NGA,Nigeria,Africa,West Africa,DVG
+NIC,Nicaragua,Latin America and the Caribbean,Mexico and Central America,DVG
+NLD,Netherlands (Kingdom of the),Europe,European Union,DVD
+NOR,Norway,Europe,Other Europe,DVD
+NPL,Nepal,Asia,South Asia,DVG
+NZL,New Zealand,Developed Asia and the Pacific,,DVD
+OMN,Oman,Asia,Western Asia,DVG
+PAK,Pakistan,Asia,South Asia,DVG
+PAN,Panama,Latin America and the Caribbean,Mexico and Central America,DVG
+PER,Peru,Latin America and the Caribbean,South America,DVG
+PHL,Philippines,Asia,East Asia,DVG
+PNG,Papua New Guinea,Asia,East Asia,DVG
+POL,Poland,Europe,European Union,DVD
+PRK,Democratic People's Republic of Korea,Asia,East Asia,DVG
+PRT,Portugal,Europe,European Union,DVD
+PRY,Paraguay,Latin America and the Caribbean,South America,DVG
+PSE,State of Palestine,Asia,Western Asia,DVG
+QAT,Qatar,Asia,Western Asia,DVG
+ROU,Romania,Europe,European Union,DVD
+RUS,Russian Federation,Commonwealth of Independent States and Georgia,,EIT
+RWA,Rwanda,Africa,East Africa,DVG
+SAU,Saudi Arabia,Asia,Western Asia,DVG
+SDN,Sudan,Africa,North Africa,DVG
+SEN,Senegal,Africa,West Africa,DVG
+SGP,Singapore,Asia,East Asia,DVG
+SLB,Solomon Islands,Asia,East Asia,DVG
+SLE,Sierra Leone,Africa,West Africa,DVG
+SLV,El Salvador,Latin America and the Caribbean,Mexico and Central America,DVG
+SOM,Somalia,Africa,East Africa,DVG
+SRB,Serbia,South-Eastern Europe,,EIT
+SSD,South Sudan,Africa,East Africa,DVG
+STP,Sao Tome and Principe,Africa,Central Africa,DVG
+SUR,Suriname,Latin America and the Caribbean,Caribbean,DVG
+SVK,Slovakia,Europe,European Union,DVD
+SVN,Slovenia,Europe,European Union,DVD
+SWE,Sweden,Europe,European Union,DVD
+SWZ,Eswatini,Africa,Southern Africa,DVG
+SYR,Syrian Arab Republic,Asia,Western Asia,DVG
+TCD,Chad,Africa,Central Africa,DVG
+TGO,Togo,Africa,West Africa,DVG
+THA,Thailand,Asia,East Asia,DVG
+TJK,Tajikistan,Commonwealth of Independent States and Georgia,,EIT
+TKM,Turkmenistan,Commonwealth of Independent States and Georgia,,EIT
+TLS,Timor-Leste,Asia,East Asia,DVG
+TTO,Trinidad and Tobago,Latin America and the Caribbean,Caribbean,DVG
+TUN,Tunisia,Africa,North Africa,DVG
+TUR,Türkiye,Asia,Western Asia,DVG
+TWN,Taiwan Province of China,Asia,East Asia,DVG
+TZA,United Republic of Tanzania,Africa,East Africa,DVG
+UGA,Uganda,Africa,East Africa,DVG
+UKR,Ukraine,Commonwealth of Independent States and Georgia,,EIT
+URY,Uruguay,Latin America and the Caribbean,South America,DVG
+USA,United States of America,North America,,DVD
+UZB,Uzbekistan,Commonwealth of Independent States and Georgia,,EIT
+VEN,Venezuela (Bolivarian Republic of),Latin America and the Caribbean,South America,DVG
+VNM,Viet Nam,Asia,East Asia,DVG
+VUT,Vanuatu,Asia,East Asia,DVG
+WSM,Samoa,Asia,East Asia,DVG
+YEM,Yemen,Asia,Western Asia,DVG
+ZAF,South Africa,Africa,Southern Africa,DVG
+ZMB,Zambia,Africa,Southern Africa,DVG
+ZWE,Zimbabwe,Africa,Southern Africa,DVG
