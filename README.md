@@ -18,7 +18,7 @@ An interactive viewer of the cost of sending remittances, built from the World B
 - **Corridor table:** sender → receiver, searchable and sortable.
 - **Download PNG:** each chart has a button that saves it as a PNG (2× resolution, light background). The image includes the title, the active filters, the legend and the source.
 - **Download data:** each chart, and the corridor table, has a button that saves exactly what it shows as an Excel file, with an About sheet listing the filters, method and source. Built in the browser with SheetJS (loaded from cdnjs).
-- **Download full dataset (Excel):** top right. All 204,469 service quotes (Q2 2016 to Q3 2025, all corridors), cleaned, with WESP region, subregion and development status for sender and receiver (`data/rpw_services_2016q2_2025q3.xlsx`, 14 MB).
+- **Download full dataset (Excel):** top right. All 204,469 service quotes (Q2 2016 to Q3 2025, all corridors), cleaned, with WESP region, subregion and development status for sender and receiver (`data/rpw_services_2016q2_2025q3.xlsx`, 16 MB).
 
 With no filters, the series reproduces the World Bank's published global average: 6.36% in Q3 2025 and 6.49% in Q1 2025.
 

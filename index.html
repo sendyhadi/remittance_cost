@@ -130,7 +130,7 @@ a{color:var(--series-1)}
       <p class="sub">Average total cost (fee + FX margin, as % of the amount sent) of remittance services priced by the World Bank, by quarter, 2016 Q2 to 2025 Q3. Filter by the region, subregion and development status (UN WESP classification) of the receiving and the sending country.</p>
     </div>
     <div class="headtools">
-      <button class="btn" id="dlFull" type="button" title="All 204,469 service quotes, Q2 2016 to Q3 2025, with WESP regions (Excel, 14 MB)">Download full dataset (Excel)</button>
+      <button class="btn" id="dlFull" type="button" title="All 204,469 service quotes, Q2 2016 to Q3 2025, with WESP regions (Excel, 16 MB)">Download full dataset (Excel)</button>
       <button class="btn" id="theme" aria-label="Toggle dark mode">◐</button>
     </div>
   </header>
@@ -151,11 +151,18 @@ a{color:var(--series-1)}
       <div class="field" id="ms-sCountry"></div>
     </div>
     <div class="fgroup">
-      <div class="gname">Service and view</div>
+      <div class="gname">Service</div>
       <div class="field" id="ms-provider"></div>
       <div class="field" id="ms-instrument"></div>
+      <div class="field" id="ms-pmeth"></div>
+      <div class="field" id="ms-ploc"></div>
+    </div>
+    <div class="fgroup">
+      <div class="gname">Coverage and view</div>
+      <div class="field" id="ms-coverage"></div>
       <label class="field"><span>Quarter (figures, bars, table)</span><select id="fQuarter"></select></label>
       <label class="field"><span>Amount (bars and table)</span><select id="fAmount"></select></label>
+      <div></div>
     </div>
     <div class="factions">
       <span class="small" id="selSummary"></span>
@@ -221,6 +228,7 @@ a{color:var(--series-1)}
     <p><b>What it measures:</b> each observation is a price quote for one service (provider × corridor × payment and pickup method) for a hypothetical USD 200 and USD 500 transfer, collected by mystery shopping. These are not actual transactions and are not volume-weighted.</p>
     <p><b>Method:</b> simple average of total cost (fee + FX margin) across transparent services, as in the World Bank global average (SDG indicator 10.c.1). With no filters, the series reproduces the published global average (for example, 6.36% in Q3 2025).</p>
     <p><b>Regions and status:</b> UN <i>World Economic Situation and Prospects</i> (WESP) Annex classification: region, subregion and development status (developed, economies in transition, developing). Where a country has no subregion, its region is used. Kosovo and Tonga are not in the classification and show as “Unclassified”.</p>
+    <p><b>Service fields:</b> receiving network coverage (High, Medium, Low) is the World Bank's rating of how extensive the provider's pickup network is in the receiving country. Pickup method is how the money reaches the recipient (cash, bank account, mobile wallet). Pickup location is where cash is collected (agent, bank branch, home delivery); it is blank for most account and wallet deposits and shows as “Not specified”. Spelling variants were merged.</p>
     <p><b>Cleaning:</b> in the original file, values for 2024 Q3 and Q4 were stored as text; they were converted to numbers. The World Bank published no data for Q2 2025.</p>
   </footer>
 </div>
@@ -249,7 +257,7 @@ const lastIdx=Math.max(...rows.map(r=>r[0]));
 const STATUS_ORDER=["DVD","EIT","DVG","Unclassified"];
 
 // ---- state: empty Set = no filter (all)
-const SETKEYS=["rRegion","rSub","rStatus","rCountry","sRegion","sSub","sStatus","sCountry","provider","instrument"];
+const SETKEYS=["rRegion","rSub","rStatus","rCountry","sRegion","sSub","sStatus","sCountry","provider","instrument","pmeth","ploc","coverage"];
 const S={quarter:lastIdx,amount:200,groupBy:"rRegion"};
 SETKEYS.forEach(k=>S[k]=new Set());
 
@@ -297,7 +305,8 @@ function MultiSelect(key,label,{search=false}={}){
 const MS={
   rRegion:MultiSelect("rRegion","Region"), rSub:MultiSelect("rSub","Subregion"), rStatus:MultiSelect("rStatus","Development status"), rCountry:MultiSelect("rCountry","Country",{search:true}),
   sRegion:MultiSelect("sRegion","Region"), sSub:MultiSelect("sSub","Subregion"), sStatus:MultiSelect("sStatus","Development status"), sCountry:MultiSelect("sCountry","Country",{search:true}),
-  provider:MultiSelect("provider","Provider type"), instrument:MultiSelect("instrument","Payment instrument")
+  provider:MultiSelect("provider","Provider type"), instrument:MultiSelect("instrument","Payment instrument"),
+  pmeth:MultiSelect("pmeth","Pickup method"), ploc:MultiSelect("ploc","Pickup location"), coverage:MultiSelect("coverage","Receiving network coverage")
 };
 
 // ---- filtering
@@ -311,6 +320,9 @@ function match(r,skip={}){
   if(!rOK[r[2]]||!sOK[r[1]]) return false;
   if(!skip.provider && !inSet(S.provider,r[3])) return false;
   if(!skip.instrument && !inSet(S.instrument,r[4])) return false;
+  if(!skip.coverage && !inSet(S.coverage,r[5])) return false;
+  if(!skip.ploc && !inSet(S.ploc,r[6])) return false;
+  if(!skip.pmeth && !inSet(S.pmeth,r[7])) return false;
   return true;
 }
 const avg=(s,n)=>n>0?s/n:null;
@@ -332,6 +344,9 @@ function buildFilters(){
   buildSide("r",RCV); buildSide("s",SND);
   MS.provider.setOptions(D.providerTypes.map((p,i)=>[i,nm(p)]).filter(([i])=>rows.some(r=>r[3]===i)));
   MS.instrument.setOptions(D.instruments.map((p,i)=>[i,nm(p)]).filter(([i])=>rows.some(r=>r[4]===i)));
+  MS.coverage.setOptions(D.coverage.map((p,i)=>[i,p]).filter(([i])=>rows.some(r=>r[5]===i)));
+  MS.ploc.setOptions(D.pickupLocations.map((p,i)=>[i,p]).filter(([i])=>rows.some(r=>r[6]===i)));
+  MS.pmeth.setOptions(D.pickupMethods.map((p,i)=>[i,p]).filter(([i])=>rows.some(r=>r[7]===i)));
   S.quarter=+fillSelect(document.getElementById("fQuarter"),P.map((p,i)=>[i,qLabel(p)]).filter(([i])=>!missing.has(i)).reverse(),S.quarter);
   S.amount=+fillSelect(document.getElementById("fAmount"),[[200,"USD 200"],[500,"USD 500"]],S.amount);
   S.groupBy=fillSelect(document.getElementById("groupBy"),GB.map(g=>[g[0],g[1]]),S.groupBy);
@@ -358,7 +373,7 @@ function tipRow(color,value,label){ const r=el("div",{class:"row"}); if(color){c
 function renderLine(){
   const host=document.getElementById("lineChart");
   const ser=P.map(()=>({s1:0,n1:0,s2:0,n2:0}));
-  for(const r of rows){ if(!match(r)) continue; const a=ser[r[0]]; a.n1+=r[5]; a.s1+=r[6]; a.n2+=r[7]; a.s2+=r[8]; }
+  for(const r of rows){ if(!match(r)) continue; const a=ser[r[0]]; a.n1+=r[8]; a.s1+=r[9]; a.n2+=r[10]; a.s2+=r[11]; }
   const v200=ser.map(a=>avg(a.s1,a.n1)), v500=ser.map(a=>avg(a.s2,a.n2)), nS=ser.map(a=>a.n1);
   LAST.line={v200,v500,n1:nS,n2:ser.map(a=>a.n2)};
   host.textContent="";
@@ -455,8 +470,12 @@ function renderBars(hostId,items,title){
   host.appendChild(svg);
 }
 const GB=[["rRegion","Receiving region"],["rSub","Receiving subregion"],["rStatus","Receiving status"],["rCountry","Receiving country"],
-          ["sRegion","Sending region"],["sSub","Sending subregion"],["sStatus","Sending status"],["sCountry","Sending country"]];
+          ["sRegion","Sending region"],["sSub","Sending subregion"],["sStatus","Sending status"],["sCountry","Sending country"],
+          ["pmeth","Pickup method"],["ploc","Pickup location"],["coverage","Receiving network coverage"]];
 function keyOf(r){
+  if(S.groupBy==="pmeth") return [r[7],D.pickupMethods[r[7]]];
+  if(S.groupBy==="ploc") return [r[6],D.pickupLocations[r[6]]];
+  if(S.groupBy==="coverage") return [r[5],D.coverage[r[5]]];
   const g=S.groupBy, c=g[0]==="r"?RCV[r[2]]:SND[r[1]], f=g.slice(1);
   if(f==="Region") return [c[2],nm(c[2])];
   if(f==="Sub") return [c[3],nm(c[3])];
@@ -464,7 +483,7 @@ function keyOf(r){
   return [c[0],c[1]];
 }
 function renderBreakdowns(){
-  const q=+S.quarter, a=S.amount, si=a===200?6:8, ni=a===200?5:7;
+  const q=+S.quarter, a=S.amount, si=a===200?9:11, ni=a===200?8:10;
   const note=`${qLabel(P[q])}, sending USD ${a}. Highest to lowest cost.`;
   const agg=new Map();
   for(const r of rows){ if(r[0]!==q||!match(r)) continue; const [k,label]=keyOf(r); const o=agg.get(k)||{s:0,n:0,label}; o.s+=r[si]; o.n+=r[ni]; agg.set(k,o); }
@@ -488,7 +507,7 @@ function renderBreakdowns(){
 
 // ---- tiles
 function renderTiles(){
-  const q=+S.quarter, a=S.amount, si=a===200?6:8, ni=a===200?5:7;
+  const q=+S.quarter, a=S.amount, si=a===200?9:11, ni=a===200?8:10;
   let s=0,n=0,sp=0,np=0; const corr=new Set(), rc=new Set(), sc=new Set();
   const prev=P.indexOf((+P[q].slice(0,4)-1)+P[q].slice(4));
   for(const r of rows){ if(!match(r)) continue;
@@ -514,7 +533,7 @@ let sortKey="avg200", sortDir=-1;
 function renderTable(){
   const q=+S.quarter, m=new Map();
   for(const r of rows){ if(r[0]!==q||!match(r)) continue; const k=r[1]+"-"+r[2];
-    const o=m.get(k)||{s:r[1],d:r[2],n1:0,s1:0,n2:0,s2:0,mn:Infinity}; o.n1+=r[5]; o.s1+=r[6]; o.n2+=r[7]; o.s2+=r[8]; if(r[9]!=null&&r[9]<o.mn)o.mn=r[9]; m.set(k,o); }
+    const o=m.get(k)||{s:r[1],d:r[2],n1:0,s1:0,n2:0,s2:0,mn:Infinity}; o.n1+=r[8]; o.s1+=r[9]; o.n2+=r[10]; o.s2+=r[11]; if(r[12]!=null&&r[12]<o.mn)o.mn=r[12]; m.set(k,o); }
   let list=[...m.values()].map(o=>({sender:SND[o.s][1],sSub:nm(SND[o.s][3]),receiver:RCV[o.d][1],rSub:nm(RCV[o.d][3]),n:o.n1,avg200:avg(o.s1,o.n1),avg500:avg(o.s2,o.n2),min:o.mn===Infinity?null:o.mn}));
   const qs=document.getElementById("search").value.trim().toLowerCase();
   if(qs) list=list.filter(o=>(o.sender+" "+o.receiver+" "+o.sSub+" "+o.rSub).toLowerCase().includes(qs));
@@ -544,7 +563,7 @@ function renderAll(){ renderTiles(); renderLine(); renderBreakdowns(); renderTab
 
 // ---- PNG export
 const FILTER_NAMES={rRegion:"Receiving region",rSub:"Receiving subregion",rStatus:"Receiving status",rCountry:"Receiving country",
-  sRegion:"Sending region",sSub:"Sending subregion",sStatus:"Sending status",sCountry:"Sending country",provider:"Provider type",instrument:"Payment instrument"};
+  sRegion:"Sending region",sSub:"Sending subregion",sStatus:"Sending status",sCountry:"Sending country",provider:"Provider type",instrument:"Payment instrument",pmeth:"Pickup method",ploc:"Pickup location",coverage:"Receiving network coverage"};
 function describeFilters(){
   const parts=SETKEYS.filter(k=>S[k].size).map(k=>{ const l=MS[k].selectedLabels(); const shown=l.length>4?l.slice(0,4).join(", ")+` +${l.length-4} more`:l.join(", "); return FILTER_NAMES[k]+": "+shown; });
   return parts.length?parts.join(" · "):"All corridors (no filters)";
