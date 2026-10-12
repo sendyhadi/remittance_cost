@@ -253,7 +253,7 @@ const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim
 // ---- data
 const P=D.periods, rows=D.rows, SND=D.senders, RCV=D.receivers;   // country: [code,name,region,subregion,status]
 const missing=new Set(P.map((p,i)=>i).filter(i=>!rows.some(r=>r[0]===i)));
-const lastIdx=Math.max(...rows.map(r=>r[0]));
+let lastIdx=0; for(const r of rows){ if(r[0]>lastIdx) lastIdx=r[0]; }   // loop, not Math.max(...rows): Safari caps call arguments at 65,536
 const STATUS_ORDER=["DVD","EIT","DVG","Unclassified"];
 
 // ---- state: empty Set = no filter (all)
