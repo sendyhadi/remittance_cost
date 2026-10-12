@@ -7,14 +7,14 @@ An interactive viewer of the cost of sending remittances, built from the World B
 **Filters.** All filters are multi-select, and an empty filter means "All".
 - **Receiving country:** region, subregion, development status, country.
 - **Sending country:** region, subregion, development status, country.
-- **Service:** provider type and payment instrument.
+- **Service:** provider type, payment instrument, pickup method, pickup location and receiving network coverage.
 - **View:** quarter and amount (USD 200 or USD 500). These are single choices.
 
 **Charts and figures.**
 - **Headline figures for the selected quarter:** average cost, year-on-year change, number of services quoted, and the cost relative to the 3% SDG target.
 - **Average cost by quarter:** USD 200 and USD 500, with the 3% target as a reference line. A data table is available below the chart.
 - **Breakdown chart:** group by region, subregion, development status or country, on the receiving or sending side.
-- **Breakdowns by payment instrument and by provider type.**
+- **Breakdowns by payment instrument, provider type, pickup method and pickup location.** Each breakdown ignores its own filter, so every category stays visible for comparison.
 - **Corridor table:** sender → receiver, searchable and sortable.
 - **Download PNG:** each chart has a button that saves it as a PNG (2× resolution, light background). The image includes the title, the active filters, the legend and the source.
 - **Download data:** each chart, and the corridor table, has a button that saves exactly what it shows as an Excel file, with an About sheet listing the filters, method and source. Built in the browser with SheetJS (loaded from cdnjs).

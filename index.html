@@ -92,6 +92,7 @@ button,select,input{font:inherit;color:var(--text-primary)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .key{display:inline-block;width:16px;height:2px;border-radius:2px}
 .key.dash{background:none;border-top:2px dashed var(--ref);height:0}
+.gridHalf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .grid2{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px}
 .chart{position:relative;width:100%}
 .chart.scroll{max-height:620px;overflow-y:auto;overflow-x:hidden}
@@ -117,7 +118,7 @@ footer p{margin:6px 0;max-width:900px}
 a{color:var(--series-1)}
 .empty{color:var(--text-muted);font-size:13px;padding:24px 0;text-align:center}
 @media (max-width:960px){.fgroup{grid-template-columns:repeat(2,minmax(0,1fr))}.fgroup .gname{grid-column:1/-1}}
-@media (max-width:860px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:860px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:minmax(0,1fr)}.gridHalf{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:480px){.tile .v{font-size:22px}h1{font-size:20px}.fgroup{grid-template-columns:minmax(0,1fr)}}
 @media (prefers-reduced-motion:reduce){.tooltip{transition:none}}
 </style>
@@ -213,6 +214,19 @@ a{color:var(--series-1)}
     </section>
   </div>
 
+  <div class="gridHalf">
+    <section class="card">
+      <div class="subhead"><h2>By pickup method</h2><div class="headtools"><button class="dlbtn" type="button" data-export="pmeth">Download PNG</button><button class="dlbtn" type="button" data-xlsx="pmeth">Download data</button></div></div>
+      <p class="note" id="pmethNote"></p>
+      <div class="chart" id="pmethChart"></div>
+    </section>
+    <section class="card">
+      <div class="subhead"><h2>By pickup location</h2><div class="headtools"><button class="dlbtn" type="button" data-export="ploc">Download PNG</button><button class="dlbtn" type="button" data-xlsx="ploc">Download data</button></div></div>
+      <p class="note" id="plocNote"></p>
+      <div class="chart" id="plocChart"></div>
+    </section>
+  </div>
+
   <section class="card">
     <h2 id="tableTitle"></h2>
     <div class="tabletools">
@@ -228,7 +242,7 @@ a{color:var(--series-1)}
     <p><b>What it measures:</b> each observation is a price quote for one service (provider × corridor × payment and pickup method) for a hypothetical USD 200 and USD 500 transfer, collected by mystery shopping. These are not actual transactions and are not volume-weighted.</p>
     <p><b>Method:</b> simple average of total cost (fee + FX margin) across transparent services, as in the World Bank global average (SDG indicator 10.c.1). With no filters, the series reproduces the published global average (for example, 6.36% in Q3 2025).</p>
     <p><b>Regions and status:</b> UN <i>World Economic Situation and Prospects</i> (WESP) Annex classification: region, subregion and development status (developed, economies in transition, developing). Where a country has no subregion, its region is used. Kosovo and Tonga are not in the classification and show as “Unclassified”.</p>
-    <p><b>Service fields:</b> receiving network coverage (High, Medium, Low) is the World Bank's rating of how extensive the provider's pickup network is in the receiving country. Pickup method is how the money reaches the recipient (cash, bank account, mobile wallet). Pickup location is where cash is collected (agent, bank branch, home delivery); it is blank for most account and wallet deposits and shows as “Not specified”. Spelling variants were merged.</p>
+    <p><b>Service fields:</b> receiving network coverage (High, Medium, Low) is the World Bank's rating of how extensive the provider's pickup network is in the receiving country. Pickup method is how the money reaches the recipient (cash, bank account, mobile wallet). Pickup location is where cash is collected (agent, bank branch, home delivery); it is blank for most account and wallet deposits and shows as “Not specified”. “Own/partner bank” is a deposit to an account at the provider’s own or partner bank. Spelling variants were merged.</p>
     <p><b>Cleaning:</b> in the original file, values for 2024 Q3 and Q4 were stored as text; they were converted to numbers. The World Bank published no data for Q2 2025.</p>
   </footer>
 </div>
@@ -239,7 +253,7 @@ a{color:var(--series-1)}
 (function(){
 "use strict";
 const D=window.RPW_DATA;
-const NAMES={"MTO":"Money transfer operator","DVD":"Developed","DVG":"Developing","EIT":"Economies in transition",
+const NAMES={"MTO":"Money transfer operator","Bank account (own/partner bank)":"Own/partner bank","DVD":"Developed","DVG":"Developing","EIT":"Economies in transition",
   "Commonwealth of Independent States and Georgia":"CIS and Georgia"};
 const nm=k=>NAMES[k]||k;
 const fmt=(v,d=2)=>v==null||isNaN(v)?"–":v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -492,8 +506,10 @@ function renderBreakdowns(){
   const barItems=[...agg.values()].filter(o=>o.n>0).map(o=>({label:o.label,v:o.s/o.n,n:o.n}));
   LAST.bar={title:bt,group:GB.find(g=>g[0]===S.groupBy)[1],items:barItems};
   renderBars("barChart",barItems.slice(),bt);
-  const ag2=new Map(), ag3=new Map();
+  const ag2=new Map(), ag3=new Map(), ag4=new Map(), ag5=new Map();
   for(const r of rows){ if(r[0]!==q) continue;
+    if(match(r,{pmeth:true})){ const o=ag4.get(r[7])||{s:0,n:0}; o.s+=r[si]; o.n+=r[ni]; ag4.set(r[7],o); }
+    if(match(r,{ploc:true})){ const o=ag5.get(r[6])||{s:0,n:0}; o.s+=r[si]; o.n+=r[ni]; ag5.set(r[6],o); }
     if(match(r,{instrument:true})){ const o=ag2.get(r[4])||{s:0,n:0}; o.s+=r[si]; o.n+=r[ni]; ag2.set(r[4],o); }
     if(match(r,{provider:true})){ const o=ag3.get(r[3])||{s:0,n:0}; o.s+=r[si]; o.n+=r[ni]; ag3.set(r[3],o); } }
   document.getElementById("instNote").textContent=note;
@@ -503,6 +519,13 @@ function renderBreakdowns(){
   LAST.prov={title:"Average cost by provider type",group:"Provider type",items:provItems};
   renderBars("instChart",instItems.slice(),"By payment instrument");
   renderBars("provChart",provItems.slice(),"By provider type");
+  const pmItems=[...ag4].filter(([,o])=>o.n>0).map(([k,o])=>({label:nm(D.pickupMethods[k]),v:o.s/o.n,n:o.n}));
+  const plItems=[...ag5].filter(([,o])=>o.n>0).map(([k,o])=>({label:nm(D.pickupLocations[k]),v:o.s/o.n,n:o.n}));
+  LAST.pmeth={title:"Average cost by pickup method",group:"Pickup method",items:pmItems};
+  LAST.ploc={title:"Average cost by pickup location",group:"Pickup location",items:plItems};
+  document.getElementById("pmethNote").textContent=note; document.getElementById("plocNote").textContent=note;
+  renderBars("pmethChart",pmItems.slice(),"By pickup method");
+  renderBars("plocChart",plItems.slice(),"By pickup location");
 }
 
 // ---- tiles
@@ -594,8 +617,8 @@ async function exportChart(kind,btn){
     if(kind==="line"){ renderLine(); hostId="lineChart"; title="Average cost of sending remittances, by quarter";
       sub="Simple average of transparent services, "+qLabel(P[0])+" to "+qLabel(P[P.length-1])+". Q2 2025 not published.";
       legend=[["line",css("--series-1"),"USD 200"],["line",css("--series-2"),"USD 500"],["dash",css("--ref"),"SDG target 3%"]]; }
-    else { renderBreakdowns(); hostId={bar:"barChart",inst:"instChart",prov:"provChart"}[kind];
-      title={bar:document.getElementById("barTitle").textContent,inst:"Average cost by payment instrument",prov:"Average cost by provider type"}[kind];
+    else { renderBreakdowns(); hostId={bar:"barChart",inst:"instChart",prov:"provChart",pmeth:"pmethChart",ploc:"plocChart"}[kind];
+      title={bar:document.getElementById("barTitle").textContent,inst:"Average cost by payment instrument",prov:"Average cost by provider type",pmeth:"Average cost by pickup method",ploc:"Average cost by pickup location"}[kind];
       sub=q+", sending "+amt+". Simple average of transparent services.";
       legend=[["bar",css(S.amount===200?"--series-1":"--series-2"),amt],["dash",css("--ref"),"SDG target 3%"]]; }
     const svg=document.getElementById(hostId).querySelector("svg");
